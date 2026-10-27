@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Детективи речення</title>
+<style>
+:root{--bg:#e3edf0;--ink:#1d3557;--stamp:#c8382b;--gold:#f2b705;--o:#2a7ab0;--b:#d9822b;--d:#7b4fa3;--muted:#5b6b7d}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.5 "Trebuchet MS","Segoe UI",system-ui,sans-serif}
+.wrap{max-width:780px;margin:0 auto;padding:14px}
+header{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+h1{font:700 26px Georgia,serif;margin:6px 0}
+h2{font:700 22px Georgia,serif;margin:0 0 8px}
+.pill{background:var(--ink);color:#fff;border-radius:99px;padding:4px 14px;font-weight:700}
+.lv{display:flex;gap:6px;margin:8px 0}
+.lv span{flex:1;text-align:center;padding:5px;border:2px solid var(--ink);border-radius:8px;font-size:14px;background:#fff;opacity:.6}
+.lv .on{background:var(--gold);opacity:1;font-weight:700}
+.lv .fin{background:#cdeae6;opacity:1}
+.card{background:#fff;border:2px solid var(--ink);border-radius:14px;box-shadow:5px 5px 0 var(--ink);padding:18px;margin:12px 0}
+.top{display:flex;justify-content:space-between;font-size:14px;color:var(--muted);gap:8px;flex-wrap:wrap}
+.sent{font:700 clamp(22px,5vw,30px)/2.1 Georgia,serif;margin:8px 0}
+.tok{font:inherit;background:none;border:0;padding:0 5px;margin:0;border-radius:6px;color:inherit}
+button.tok{cursor:pointer}
+button.tok:hover{background:#e9f0f4}
+.tok.c{color:var(--muted)}
+.tok.s{background:#ffe8a3;text-decoration:underline solid var(--ink) 3px;text-underline-offset:7px}
+.tok.p{background:#bfe5df;text-decoration:underline double var(--ink) 2px;text-underline-offset:7px}
+.tok.o{text-decoration:underline wavy var(--o) 2px;text-underline-offset:7px}
+.tok.b{text-decoration:underline dashed var(--b) 3px;text-underline-offset:7px}
+.tok.d{text-decoration:underline dotted var(--d) 3px;text-underline-offset:7px}
+.step{margin:6px 0}
+.msg{min-height:3.2em;padding:10px 12px;border-radius:10px;background:#eef3f6;margin:10px 0}
+.msg.ok{background:#d6f0ec}.msg.bad{background:#fde3da}
+.stars{font-size:22px;min-height:32px}
+.stars i{font-style:normal}.stars .h{opacity:.35}
+.bank{display:flex;flex-wrap:wrap;gap:8px;min-height:54px;padding:10px;border:2px dashed var(--muted);border-radius:10px;margin:10px 0}
+.chip{font:700 19px Georgia,serif;background:#fff;border:2px solid var(--ink);border-radius:10px;padding:6px 12px;cursor:grab;user-select:none}
+.chip.sel{background:var(--gold)}
+.shake{animation:sh .35s}
+@keyframes sh{25%{transform:translateX(-6px)}75%{transform:translateX(6px)}}
+@media (prefers-reduced-motion:reduce){.shake{animation:none}}
+.boxes{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px}
+.box{min-width:0;max-width:100%;min-height:104px;border:3px solid;border-radius:12px;background:#fff;padding:8px 10px;text-align:left;font:inherit;color:inherit;cursor:pointer;display:flex;flex-direction:column;gap:2px}
+.box small{color:var(--muted)}
+.box.o{border-color:var(--o)}.box.b{border-color:var(--b)}.box.d{border-color:var(--d)}
+.pl{font:700 18px Georgia,serif;overflow-wrap:anywhere;word-break:break-word}
+.plw{display:flex;flex-wrap:wrap;gap:2px 10px;min-width:0;max-width:100%}
+.btn{font:700 18px "Trebuchet MS",system-ui,sans-serif;background:var(--stamp);color:#fff;border:2px solid var(--ink);border-radius:10px;padding:10px 20px;box-shadow:3px 3px 0 var(--ink);cursor:pointer}
+.btn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
+.stamp{display:inline-block;border:4px solid var(--stamp);color:var(--stamp);font:700 20px Georgia,serif;padding:2px 12px;border-radius:8px;transform:rotate(-5deg);margin:4px 14px 4px 0}
+.legend{display:flex;flex-wrap:wrap;gap:6px 14px;font-size:15px;margin:8px 0}
+table{width:100%;border-collapse:collapse}
+td,th{padding:6px;border-bottom:1px solid #d0dae0;text-align:left;font-size:15px}
+td:last-child,th:last-child{white-space:nowrap}
+.big{font:700 32px Georgia,serif}
+</style>
+</head>
+<body>
+<div class="wrap">
+<header><h1>🔍 Детективи речення</h1><div class="pill">⭐ <span id="tot">0</span></div></header>
+<div class="lv" id="lv"></div>
+<main id="app"></main>
+</div>
+<script>
+const POOL={
+1:['Мама|s читає|p цікаву|o|яку? книгу.|d|що?',
+'Діти|s граються|p у_дворі.|b|де?',
+'Весняне|o|яке? сонце|s гріє.|p',
+'Птах|s співає|p вранці.|b|коли?',
+'Тато|s ремонтує|p старий|o|який? велосипед.|d|що?',
+'Кіт|s ловить|p мишу.|d|кого?',
+'Дощ|s іде|p вночі.|b|коли?',
+'Бабуся|s пече|p смачні|o|які? пиріжки.|d|що?',
+'Учень|s пише|p диктант.|d|що?'],
+2:['Маленький|o|який? хлопчик|s уранці|b|коли? читає|p цікаву|o|яку? книгу.|d|що?',
+'Веселі|o|які? діти|s взимку|b|коли? катаються|p на_гірці.|b|де?',
+'Старенька|o|яка? бабуся|s щодня|b|коли? поливає|p кімнатні|o|які? квіти.|d|що?',
+'Школярі|s восени|b|коли? збирають|p золоте|o|яке? листя|d|що? в_парку.|b|де?',
+'Веселий|o|який? кіт|s швидко|b|як? ловить|p сірих|o|яких? мишей.|d|кого?',
+'Сильний|o|який? вітер|s раптово|b|як? зламав|p тонку|o|яку? гілку.|d|що?',
+'Юний|o|який? художник|s старанно|b|як? малює|p осінній|o|який? ліс.|d|що?',
+'Мама|s ввечері|b|коли? розповідає|p дітям|d|кому? цікаву|o|яку? казку.|d|що?'],
+3:['Хлопчик|s і|c дівчинка|s читають|p цікаві|o|які? книжки.|d|що?',
+'Діти|s малюють|p і|c співають|p у_класі.|b|де?',
+'Мама|s купила|p яблука,|d|що? груші|d|що? та|c сливи.|d|що?',
+'Ми|s гуляли|p у_лісі|b|де? та|c в_парку.|b|де?',
+'Гарні|o|які? та|c ароматні|o|які? квіти|s ростуть|p на_клумбі.|b|де?',
+'Тигр|s швидко|b|як? і|c спритно|b|як? наздогнав|p здобич.|d|що?',
+'Влітку|b|коли? ми|s плаваємо|p і|c засмагаємо|p на_морі.|b|де?']};
+const ROLE={o:{n:'Означення',q:'який? яка? яке? які?'},b:{n:'Обставина',q:'де? коли? як? куди?'},d:{n:'Додаток',q:'кого? чого? кому? що?'}};
+const $=s=>document.querySelector(s);
+const shuf=a=>{a=a.slice();for(let i=a.length-1;i>0;i--){const j=Math.random()*(i+1)|0;[a[i],a[j]]=[a[j],a[i]]}return a};
+const parse=s=>s.split(' ').map(w=>{const[t,r,q]=w.split('|');return{t:t.replace(/_/g,'\u00A0'),r:r||'c',q:q||'',done:false,errs:0}});
+const clean=s=>s.replace(/[.,;!]+$/,'');
+const fmt=n=>String(n).replace('.',',');
+let S;
+
+function newGame(){S={lv:0,i:0,scr:'intro',res:[[],[],[]],sents:[1,2,3].map(l=>shuf(POOL[l]).slice(0,3))};render()}
+function load(){
+  const tk=parse(S.sents[S.lv][S.i]);
+  Object.assign(S,{tk,ph:'subj',mist:false,pts:0,stars:[],sel:null,shake:null,msg:'',cls:'',scr:'case',
+    bank:shuf(tk.map((t,i)=>i).filter(i=>'obd'.includes(tk[i].r))),max:tk.filter(t=>t.r!='c').length});
+  render();
+}
+const total=()=>S.res.flat().reduce((a,r)=>a+r.pts,0)+(S.scr=='case'&&S.ph!='done'?S.pts:0);
+function award(half){S.pts+=half?.5:1;S.stars.push(half?'<i class="h">⭐</i>':'<i>⭐</i>')}
+
+function tapTok(i){
+  if(S.ph!='subj'&&S.ph!='pred')return;
+  const t=S.tk[i];if(t.r=='c'||t.done)return;
+  const want=S.ph=='subj'?'s':'p';
+  if(t.r==want){
+    t.done=true;award(S.mist);S.mist=false;S.cls='ok';
+    if(S.tk.some(x=>x.r==want&&!x.done)){S.msg='⭐ Правильно! Але є ще однорідний член — пошукай його.'}
+    else if(want=='s'){S.ph='pred';S.msg='⭐ Так, це підмет! Тепер знайди присудок.'}
+    else{S.ph='sec';S.msg='⭐ Серце речення знайдено! Тепер подивимось, які слова до нього «чіпляються».'}
+  }else{
+    S.mist=true;S.cls='bad';
+    S.msg=(t.r=='p'?'Це присудок — його шукатимемо наступним. ':'')+'А що ти запитаєш до цього слова? '+
+      (want=='s'?'Підмет відповідає на питання «хто? що?» і називає, про кого або про що мовиться.':'Присудок відповідає на питання «що робить? що з ним відбувається?».');
+  }
+  render();
+}
+function selChip(i){S.sel=S.sel===i?null:i;render()}
+function tapBox(r){
+  if(S.ph!='sec')return;
+  if(S.sel==null){S.msg='Спочатку натисни на слово зі списку, а потім — на скриньку.';S.cls='';render();return}
+  place(S.sel,r);
+}
+function drop(e,r){e.preventDefault();place(+e.dataTransfer.getData('text'),r)}
+function place(i,r){
+  const t=S.tk[i];if(!t||t.done)return;
+  if(t.r==r){
+    t.done=true;t.placed=true;award(t.errs>0);
+    S.bank=S.bank.filter(x=>x!=i);S.sel=null;S.cls='ok';
+    S.msg=`⭐ Правильно! «${clean(t.t)}» — ${ROLE[r].n.toLowerCase()} (${t.q})`;
+    if(!S.tk.some(x=>!x.done&&x.r!='c'))finish();
+  }else{
+    t.errs++;S.shake=i;S.sel=null;S.cls='bad';
+    const pr=S.tk.filter(x=>x.r=='p').map(x=>clean(x.t)).join(' і ');
+    S.msg=`А що ти запитаєш до слова «${clean(t.t)}»? Постав питання від присудка «${pr}» або від іменника, до якого це слово належить.`+(t.errs>1?` Підказка: тут питання — «${t.q}»`:'');
+  }
+  render();
+}
+function finish(){
+  S.ph='done';S.cls='ok';
+  S.res[S.lv][S.i]={pts:S.pts,max:S.max,txt:S.tk.map(t=>t.t).join(' ')};
+  S.msg='🔎 Справу розкрито! Усі члени речення знайдено.';
+}
+function next(){S.i++;if(S.i>2){S.scr='lvsum';render()}else load()}
+function afterLevel(){if(S.lv==2){S.scr='final';render()}else{S.lv++;S.i=0;load()}}
+
+const legend='<div class="legend"><span><span class="tok s">підмет</span></span><span><span class="tok p">присудок</span></span><span><span class="tok o">означення</span></span><span><span class="tok b">обставина</span></span><span><span class="tok d">додаток</span></span></div>';
+const rows=(l)=>S.res[l].map((r,k)=>`<tr><td>${l*3+k+1}</td><td>${r.txt}</td><td>${fmt(r.pts)} з ${r.max}</td></tr>`).join('');
+const sum=(l)=>S.res[l].reduce((a,r)=>[a[0]+r.pts,a[1]+r.max],[0,0]);
+
+function render(){
+  let h='';
+  $('#tot').textContent=fmt(total());
+  $('#lv').innerHTML=[0,1,2].map(l=>`<span class="${S.res[l].length==3?'fin':(l==S.lv&&S.scr=='case'?'on':'')}">Рівень ${l+1}</span>`).join('');
+  if(S.scr=='intro'){
+    h=`<div class="card"><h2>Ласкаво просимо, детективе!</h2>
+    <p>Кожне речення — це «справа», яку треба розслідувати.</p>
+    <p><b>Крок 1.</b> Знайди «серце» речення: натисни на <b>підмет</b> (хто? що?), а потім на <b>присудок</b> (що робить?).</p>
+    <p><b>Крок 2.</b> Став запитання від слова до слова й перетягни кожне слово до потрібної скриньки: <i>означення</i>, <i>обставина</i> чи <i>додаток</i>.</p>
+    <p>⭐ — правильна відповідь з першої спроби, ½ ⭐ — правильна після підказки.</p>
+    <p>Три рівні по три справи: короткі речення, довші речення, а наприкінці — речення з однорідними членами.</p>
+    ${legend}<button class="btn" onclick="load()">Розпочати розслідування</button></div>`;
+  }else if(S.scr=='case'){
+    const sent=S.tk.map((t,i)=>{
+      const click=(S.ph=='subj'||S.ph=='pred')&&t.r!='c'&&!t.done;
+      return `<${click?'button':'span'} class="tok ${t.r=='c'?'c':''} ${t.done?t.r:''}" ${click?`onclick="tapTok(${i})"`:''}>${t.t}</${click?'button':'span'}>`}).join(' ');
+    let step='';
+    if(S.ph=='subj')step='<b>Крок 1.</b> Знайди «серце» речення. Натисни на <b>підмет</b> — хто? що?';
+    if(S.ph=='pred')step='<b>Крок 1.</b> Тепер натисни на <b>присудок</b> — що робить?';
+    if(S.ph=='sec')step='<b>Крок 2.</b> Став запитання від слова до слова. Перетягни слово до потрібної скриньки (або натисни слово, а потім скриньку).';
+    if(S.lv==2&&(S.ph=='subj'||S.ph=='pred'))step+=' <i>Однорідних членів може бути кілька — знайди всі.</i>';
+    h=`<div class="card"><div class="top"><span>Рівень ${S.lv+1} · Справа ${S.i+1} з 3</span><span>Бали за справу: <b>${fmt(S.pts)}</b> з ${S.max}</span></div>
+    <h2>Справа №${S.lv*3+S.i+1}</h2><div class="sent">${sent}</div>
+    ${S.ph!='done'?`<div class="step">${step}</div>`:''}
+    <div class="stars" aria-label="Зірочки">${S.stars.join('')}</div>
+    <div class="msg ${S.cls}" aria-live="polite">${S.msg||'Почнімо розслідування!'}</div>`;
+    if(S.ph=='sec'){
+      h+=`<div class="bank">${S.bank.map(i=>`<span class="chip ${S.sel==i?'sel':''} ${S.shake==i?'shake':''}" role="button" tabindex="0" draggable="true" ondragstart="event.dataTransfer.setData('text','${i}')" onclick="selChip(${i})" onkeydown="if(event.key=='Enter'||event.key==' '){event.preventDefault();selChip(${i})}">${clean(S.tk[i].t)}</span>`).join('')}</div>
+      <div class="boxes">${['o','b','d'].map(r=>`<button class="box ${r}" onclick="tapBox('${r}')" ondragover="event.preventDefault()" ondrop="drop(event,'${r}')"><b>${ROLE[r].n}</b><small>${ROLE[r].q}</small><span class="plw">${S.tk.filter(t=>t.placed&&t.r==r).map(t=>`<span class="pl">${clean(t.t)}</span>`).join('')}</span></button>`).join('')}</div>`;
+    }
+    if(S.ph=='done'){
+      h+=`<span class="stamp">СПРАВУ РОЗКРИТО</span><b>${fmt(S.pts)} з ${S.max} балів</b>${legend}<button class="btn" onclick="next()">${S.i<2?'Наступна справа':'Підсумок рівня'}</button>`;
+    }
+    h+='</div>';
+  }else if(S.scr=='lvsum'){
+    const[p,m]=sum(S.lv);
+    h=`<div class="card"><h2>Рівень ${S.lv+1} пройдено!</h2>
+    <table><tr><th>№</th><th>Речення</th><th>Бали</th></tr>${rows(S.lv)}<tr><td></td><td><b>Разом за рівень</b></td><td><b>${fmt(p)} з ${m}</b></td></tr></table><p></p>
+    <button class="btn" onclick="afterLevel()">${S.lv<2?'До рівня '+(S.lv+2):'Подивитись підсумок'}</button></div>`;
+  }else{
+    const all=[0,1,2].map(sum),P=all.reduce((a,x)=>a+x[0],0),M=all.reduce((a,x)=>a+x[1],0),pc=P/M;
+    const rank=pc>=.9?'Головний детектив 🕵️':pc>=.7?'Детектив 🔎':'Стажист — потренуйся ще 📚';
+    h=`<div class="card"><h2>Усі справи розкрито!</h2><div class="big">${fmt(P)} з ${M}</div><p>Звання: <b>${rank}</b></p>
+    <table><tr><th>№</th><th>Речення</th><th>Бали</th></tr>${[0,1,2].map(l=>rows(l)).join('')}</table><p></p>
+    <button class="btn" onclick="newGame()">Нова гра (інші речення)</button></div>`;
+  }
+  $('#app').innerHTML=h;
+  S.shake=null;
+}
+newGame();
+</script>
+</body>
+</html>
